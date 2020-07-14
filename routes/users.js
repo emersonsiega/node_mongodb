@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 
         return res.send(data);
     } catch (err) {
-        res.send({ error: "Falhou ao consultar usuário " + err });
+        res.status(500).send({ error: "Falhou ao consultar usuário " + err });
     }
 });
 
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
         // Valida usuário já existente
         const data = await Users.findOne({ email });
         if (data) {
-            return res.send({ error: "Usuário já cadastrado" });
+            return res.status(400).send({ error: "Usuário já cadastrado" });
         }
 
         // Cria e remove pwd para retornar..
@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
         userCreated.password = undefined;
         return res.send({ userCreated, token: createUserToken(userCreated.id) });
     } catch (err) {
-        return res.send({ error: "Falhou ao criar usuário " + err });
+        return res.status(500).send({ error: "Falhou ao criar usuário " + err });
     }
 });
 
@@ -56,19 +56,19 @@ router.post("/auth", async (req, res) => {
         // Busca usuário no banco
         const data = await Users.findOne({ email }).select("+password");
         if (!data) {
-            return res.send({ error: "Usuário não encontrado" });
+            return res.status(401).send({ error: "Usuário não encontrado" });
         }
 
         // Decripta e valida password
         const same = await bcrypt.compare(password, data.password);
         if (!same) {
-            return res.send({ error: "Senha inválida" });
+            return res.status(401).send({ error: "Senha inválida" });
         }
 
         data.password = undefined;
         return res.send({ data, token: createUserToken(data.id) });
     } catch (err) {
-        return res.send({ error: "Falhou ao autenticar usuário " + err });
+        return res.status(500).send({ error: "Falhou ao autenticar usuário " + err });
     }
 });
 
